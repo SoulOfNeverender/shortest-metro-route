@@ -1,0 +1,285 @@
+1. Graph Representation
+The metro network is represented as a graph using an adjacency list, where:
+
+Each station (node) is a key in a HashMap.
+The value for each key is a list of Edge objects representing connections to other stations and their respective weights (distance or time).
+java
+Copy code
+private Map<String, List<Edge>> metroMap = new HashMap<>();
+2. Adding Stations
+The addStation method ensures a station is added to the graph. If a station already exists, it does nothing.
+
+java
+Copy code
+public void addStation(String station) {
+    metroMap.putIfAbsent(station, new ArrayList<>());
+}
+3. Adding Connections
+The addConnection method adds a bidirectional connection between two stations. Each connection is represented by an Edge object containing the target station and the weight.
+
+java
+Copy code
+public void addConnection(String from, String to, int weight) {
+    metroMap.get(from).add(new Edge(to, weight));
+    metroMap.get(to).add(new Edge(from, weight)); // Bidirectional
+}
+4. Finding the Shortest Route
+The Dijkstra's algorithm is implemented in the findShortestRoute method:
+
+Initialization:
+
+A distances map tracks the shortest distance from the start to each station.
+A previous map tracks the previous station in the shortest path.
+A PriorityQueue processes stations in order of their current shortest distance.
+Relaxation:
+
+For each station, the algorithm checks its neighbors and updates their shortest distance if a shorter path is found.
+The neighbor is added back to the queue with its updated distance.
+Path Reconstruction:
+
+The path is backtracked from the destination to the start using the previous map.
+java
+Copy code
+public List<String> findShortestRoute(String start, String destination) {
+    Map<String, Integer> distances = new HashMap<>();
+    Map<String, String> previous = new HashMap<>();
+    PriorityQueue<Edge> pq = new PriorityQueue<>(Comparator.comparingInt(edge -> edge.weight));
+
+    for (String station : metroMap.keySet()) {
+        distances.put(station, Integer.MAX_VALUE);
+    }
+    distances.put(start, 0);
+    pq.add(new Edge(start, 0));
+
+    while (!pq.isEmpty()) {
+        Edge current = pq.poll();
+        String currentStation = current.node;
+
+        for (Edge edge : metroMap.get(currentStation)) {
+            int newDistance = distances.get(currentStation) + edge.weight;
+            if (newDistance < distances.get(edge.node)) {
+                distances.put(edge.node, newDistance);
+                previous.put(edge.node, currentStation);
+                pq.add(new Edge(edge.node, newDistance));
+            }
+        }
+    }
+
+    List<String> route = new ArrayList<>();
+    for (String at = destination; at != null; at = previous.get(at)) {
+        route.add(at);
+    }
+    Collections.reverse(route);
+
+    if (route.size() == 1 && !route.get(0).equals(start)) {
+        return Collections.emptyList(); // No route found
+    }
+    return route;
+}
+5. Menu-Driven Interaction
+The main method provides an interactive menu where users can:
+
+Find the shortest route between two stations.
+Exit the program.
+The menu uses a Scanner to read user input. It validates the stations and displays the shortest route or an error message.
+
+java
+Copy code
+public static void main(String[] args) {
+    MetroShortestRoute metro = new MetroShortestRoute();
+
+    // Predefined metro network
+    metro.addStation("A");
+    metro.addStation("B");
+    metro.addStation("C");
+    metro.addStation("D");
+    metro.addConnection("A", "B", 5);
+    metro.addConnection("A", "C", 10);
+    metro.addConnection("B", "D", 15);
+    metro.addConnection("C", "D", 5);
+
+    Scanner scanner = new Scanner(System.in);
+    while (true) {
+        System.out.println("\n--- Metro Route Finder ---");
+        System.out.println("1. Find Shortest Route");
+        System.out.println("2. Exit");
+        System.out.print("Select an option: ");
+
+        int choice = scanner.nextInt();
+        scanner.nextLine(); // Consume newline
+
+        if (choice == 1) {
+            System.out.print("Enter the start station: ");
+            String start = scanner.nextLine();
+            System.out.print("Enter the destination station: ");
+            String destination = scanner.nextLine();
+
+            if (!metro.metroMap.containsKey(start) || !metro.metroMap.containsKey(destination)) {
+                System.out.println("Invalid stations. Please try again.");
+                continue;
+            }
+
+            List<String> route = metro.findShortestRoute(start, destination);
+
+            if (route.isEmpty()) {
+                System.out.println("No route found between " + start + " and " + destination + ".");
+            } else {
+                System.out.println("Shortest route: " + String.join(" -> ", route));
+            }
+        } else if (choice == 2) {
+            System.out.println("Exiting... Goodbye!");
+            break;
+        } else {
+            System.out.println("Invalid option. Please try again.");
+        }
+    }
+
+    scanner.close();
+}
+6. Edge Class
+The Edge class is a helper class representing connections between stations.
+
+java
+Copy code
+static class Edge {
+    String node;
+    int weight;
+
+    Edge(String node, int weight) {
+        this.node = node;
+        this.weight = weight;
+    }
+}
+Program Workflow
+Initialization:
+
+Create a MetroShortestRoute object and define stations and connections.
+User Interaction:
+
+Display a menu to the user.
+Prompt for the start and destination stations if the user selects the shortest route option.
+Validation:
+
+Check if stations exist and are connected.
+Shortest Route Calculation:
+
+Use Dijkstra's algorithm to compute the shortest path.
+Display Result:
+
+Print the shortest route or error messages.
+Exit:
+
+Exit the program when the user selects the exit option.
+Let me know if you have more questions!
+
+
+
+
+
+You said:
+are we using dikstras algorithm in this
+ChatGPT said:
+ChatGPT
+Yes, Dijkstra's algorithm is used in this program to find the shortest route between two stations. Let's break down how it implements Dijkstra's algorithm in the findShortestRoute method.
+
+Steps in Dijkstra's Algorithm
+Initialization:
+
+All nodes (stations) are initialized with a distance of infinity (Integer.MAX_VALUE), except the start node, which is set to 0.
+A PriorityQueue is used to store and process nodes based on their shortest known distance.
+A previous map is used to reconstruct the shortest path after the algorithm finishes.
+In the code:
+
+java
+Copy code
+Map<String, Integer> distances = new HashMap<>();
+Map<String, String> previous = new HashMap<>();
+PriorityQueue<Edge> pq = new PriorityQueue<>(Comparator.comparingInt(edge -> edge.weight));
+
+for (String station : metroMap.keySet()) {
+    distances.put(station, Integer.MAX_VALUE);
+}
+distances.put(start, 0);
+pq.add(new Edge(start, 0));
+Processing Nodes:
+
+The algorithm repeatedly extracts the node with the smallest distance from the priority queue.
+For each neighbor of the current node, it calculates a new tentative distance:
+new distance
+=
+distance to current node
++
+edge weight to neighbor
+new distance=distance to current node+edge weight to neighbor
+If the new distance is shorter than the currently known distance to the neighbor, update the distance and add the neighbor to the priority queue.
+In the code:
+
+java
+Copy code
+while (!pq.isEmpty()) {
+    Edge current = pq.poll();
+    String currentStation = current.node;
+
+    for (Edge edge : metroMap.get(currentStation)) {
+        int newDistance = distances.get(currentStation) + edge.weight;
+        if (newDistance < distances.get(edge.node)) {
+            distances.put(edge.node, newDistance);
+            previous.put(edge.node, currentStation);
+            pq.add(new Edge(edge.node, newDistance));
+        }
+    }
+}
+Reconstructing the Shortest Path:
+
+Once all nodes are processed, the shortest path to the destination is reconstructed by backtracking through the previous map.
+If no path exists, the result is an empty list.
+In the code:
+
+java
+Copy code
+List<String> route = new ArrayList<>();
+for (String at = destination; at != null; at = previous.get(at)) {
+    route.add(at);
+}
+Collections.reverse(route);
+
+if (route.size() == 1 && !route.get(0).equals(start)) {
+    return Collections.emptyList(); // No route found
+}
+return route;
+Why This is Dijkstra's Algorithm
+Priority Queue:
+
+The priority queue ensures that the station with the currently smallest distance is processed first, which is a hallmark of Dijkstra's algorithm.
+Distance Updates:
+
+Each time a shorter path to a station is found, the algorithm updates the distance and adds the station back into the priority queue.
+Greedy Approach:
+
+The algorithm uses a greedy strategy by always expanding the node with the smallest known distance.
+Limitations
+Dijkstra's algorithm assumes non-negative edge weights. If your metro system has negative weights (e.g., cost savings), you’d need a different algorithm like Bellman-Ford.
+Example Flow in the Program
+Given the predefined network:
+
+mathematica
+Copy code
+Stations: A, B, C, D
+Connections: 
+    A --5--> B
+    A --10--> C
+    B --15--> D
+    C --5--> D
+If the user selects A as the start and D as the destination:
+
+Initial distances: {A: 0, B: ∞, C: ∞, D: ∞}
+Processing A: Updates distances to B (5) and C (10).
+Processing B: Updates distance to D (20) (via A -> B).
+Processing C: Updates distance to D (15) (via A -> C).
+Final distances: {A: 0, B: 5, C: 10, D: 15}
+Path reconstructed: A -> C -> D.
+Result:
+
+mathematica
+Copy code
+Shortest route: A -> C -> D
